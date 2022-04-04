@@ -91,7 +91,7 @@ class application {
       textContent += `*${key}*: ${props[key]}\r\n`;
     });
     Browser.msgBox(`text content: ${textContent}`);
-    //
+    //    continue: upload data to redmine
   }
 
   isTrackedFieldsChanged() {
@@ -117,11 +117,9 @@ class application {
 
     const url = `https://tracker.egamings.com/projects/${redmineAlias}/wiki/Shared_Info.json?key=e2306b943c5e70ff7ba20b8bcfa95b289d78e103`;
 
-    // Browser.msgBox('before responce');
     const responce = await UrlFetchApp.fetch(url, {
           contentType: 'application/json; charset=utf-8'
         }).getContentText();
-    // Browser.msgBox('after responce');
 
     const result = JSON.parse(responce).wiki_page.text;
 
@@ -132,8 +130,6 @@ class application {
     // Logger.log(`project data: ${this.getProjectData(json.wiki_page.text)}`);
 
     this.getProjectRedmineData(result);
-    // this.currentChange.pm =
-
   }
 
   // *Статус*: Active Dev *Ответственный PM*: "Andrew Boyarchuk":https://egamings.slack.com/team/U01HWENP170
@@ -151,18 +147,9 @@ class application {
     const regExp = `^[*][А-Яа-яA-Za-z ]+[*]: `;
     const resultArr = arr.filter(item => item.search(regExp) !== -1);
 
-//        [
-//          *Статус*: Active Dev,
-//          *Ответственный PM*: "Andrew Boyarchuk":https://egamings.slack.com/team/U01HWENP170
-//        ]
-    // Browser.msgBox(`resultArr= ${resultArr}`);
-
-
-  //TODO continue
     for (let i = 0; i < resultArr.length; i++) {
       const elem = this.getProperty(resultArr[i]);
       this.currentChange.properties[elem.key] = elem.value;
-
     }
 
     Browser.msgBox(JSON.stringify(result));
@@ -177,15 +164,15 @@ class application {
     const strSplit = '*: ';
     const pos = strProperty.indexOf(strSplit) + strSplit.length;
 
-    const field1 = strProperty.substring(1, pos - strSplit.length);
-    const field2 = strProperty.substring(pos);
+    const propName = strProperty.substring(1, pos - strSplit.length);
+    const propValue = strProperty.substring(pos);
     // Logger.log(key);
     // Logger.log(value);
     // return extractName(value);
     // Browser.msgBox(`key: ${key}, value: ${value}`);
     return {
-      key: field1,
-      value: field2
+      key: propName,
+      value: propValue
     };
   }
 
