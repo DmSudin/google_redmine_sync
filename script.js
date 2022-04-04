@@ -85,19 +85,19 @@ class application {
     // await this.getProjectData(this.currentChange.projectName);
     this.loadProjectDataFromTable();
 
-    Browser.msgBox(JSON.stringify(this.currentChange));
+    Browser.msgBox(`this.currentChange: ${JSON.stringify(this.currentChange)}`);
 
     this.publishToRedmine(this.currentChange);
   }
 
     loadProjectDataFromTable() {
-      Browser.msgBox('loadProjectDataFromTable');
+      // Browser.msgBox('loadProjectDataFromTable');
       Object.keys(this.trackedColumns).forEach(key => {
         const val = this.sheetProjects.getRange(this.range.getRowIndex(), this.trackedColumns[key].index).getValue();
-        Browser.msgBox(`val: ${val}`);
+        // Browser.msgBox(`val: ${val}`);
         this.currentChange.properties[key] = val;
       });
-      Browser.msgBox(JSON.stringify(this.currentChange));
+      // Browser.msgBox(JSON.stringify(this.currentChange));
     }
 
 
@@ -112,7 +112,7 @@ class application {
     Object.keys(props).forEach(key => {
       textContent += `*${key}*: ${props[key]}\r\n`;
     });
-    Browser.msgBox(`text content: ${textContent}`);
+    Browser.msgBox(`text content (publishToRedmine): ${textContent}`);
     //    continue: upload data to redmine
   }
 
@@ -137,7 +137,7 @@ class application {
   }
 
   isProjectsSheetEdited() {
-    Browser.msgBox(this.source.getActiveSheet().getName());
+    // Browser.msgBox(this.source.getActiveSheet().getName());
     return this.source.getActiveSheet().getName() === this.sheetProjects.getName();
   }
 
@@ -181,7 +181,7 @@ class application {
       this.currentChange.properties[elem.key] = elem.value;
     }
 
-    Browser.msgBox(JSON.stringify(result));
+    // Browser.msgBox(JSON.stringify(result));
     // return result;
 
     // Logger.log(result);
@@ -245,7 +245,7 @@ function onOpen() {
 function onEdit(event) {
   app.range = event.range;
 
-  Browser.msgBox('onEdit start');
+  // Browser.msgBox('onEdit start');
   // Browser.msgBox(`app.isColumnTracked: ${app.isColumnTracked(event.range.getColumn())}`);
 
   if ( ( event.source.getActiveSheet().getName() === app.sheetProjects.getName() )
