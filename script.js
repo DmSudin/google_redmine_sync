@@ -73,12 +73,24 @@ class application {
     // Browser.msgBox('before getProjectData');
     await this.getProjectData(this.currentChange.projectName);
 
-    // this.writeToRedmine(this.currentChange);
+    Browser.msgBox(JSON.stringify(this.currentChange));
 
-
+    this.writeToRedmine(this.currentChange);
   }
 
-  writeToRedmine(projectName) {
+
+  //{"Статус":"Active Dev","Ответственный PM":"\"Andrew Boyarchuk\":https://egamings.slack.com/team/U01HWENP170"}
+  // *Статус*: Active Dev\r\n*Ответственный PM*: "Andrew Boyarchuk":https://egamings.slack.com/team/U01HWENP170 - wiki
+  writeToRedmine(changes) {
+    const redmineAlias = this.getProjectRedmineAlias(this.currentChange.projectName);
+    const props = this.currentChange.properties;
+    const url = `https://tracker.egamings.com/projects/${redmineAlias}/wiki/Shared_Info.json?key=e2306b943c5e70ff7ba20b8bcfa95b289d78e103`;
+    let textContent = '';
+
+    Object.keys(props).forEach(key => {
+      textContent += `*${key}*: ${props[key]}\r\n`;
+    });
+    Browser.msgBox(`text content: ${textContent}`);
     //
   }
 
@@ -87,8 +99,8 @@ class application {
   }
 
   isManyCellsChanged() {
-    //TODO reachable case?
-    return ((this.range.getNumColumns() !==1) || (this.range.getNumRows() !== 1));
+      //TODO reachable case?
+      return ((this.range.getNumColumns() !==1) || (this.range.getNumRows() !== 1));
   }
 
   isColumnTracked(columnNumber) {
@@ -107,8 +119,8 @@ class application {
 
     // Browser.msgBox('before responce');
     const responce = await UrlFetchApp.fetch(url, {
-      contentType: 'application/json; charset=utf-8'
-    }).getContentText();
+          contentType: 'application/json; charset=utf-8'
+        }).getContentText();
     // Browser.msgBox('after responce');
 
     const result = JSON.parse(responce).wiki_page.text;
@@ -139,14 +151,14 @@ class application {
     const regExp = `^[*][А-Яа-яA-Za-z ]+[*]: `;
     const resultArr = arr.filter(item => item.search(regExp) !== -1);
 
-    //        [
-    //          *Статус*: Active Dev,
-    //          *Ответственный PM*: "Andrew Boyarchuk":https://egamings.slack.com/team/U01HWENP170
-    //        ]
+//        [
+//          *Статус*: Active Dev,
+//          *Ответственный PM*: "Andrew Boyarchuk":https://egamings.slack.com/team/U01HWENP170
+//        ]
     // Browser.msgBox(`resultArr= ${resultArr}`);
 
 
-    //TODO continue
+  //TODO continue
     for (let i = 0; i < resultArr.length; i++) {
       const elem = this.getProperty(resultArr[i]);
       this.currentChange.properties[elem.key] = elem.value;
@@ -217,12 +229,12 @@ function onEdit(event) {
   Browser.msgBox('onEdit start');
 
   if ( ( event.source.getActiveSheet().getName() === app.sheetProjects.getName() )
-  && app.isTrackedProjectChange(event.range)
-  && ( app.isColumnTracked(event.range.getColumn()) )
-  && (event.oldValue !== event.value)
-  ) {
-    Browser.msgBox('will handle this change');
-    // Browser.msgBox(`current project edited: ${app.currentChange.projectName}`);
+    && app.isTrackedProjectChange(event.range)
+    && ( app.isColumnTracked(event.range.getColumn()) )
+    && (event.oldValue !== event.value)
+    ) {
+      Browser.msgBox('will handle this change');
+      // Browser.msgBox(`current project edited: ${app.currentChange.projectName}`);
 
     app.oldValue = event.oldValue;
     app.newValue = event.value;
@@ -258,17 +270,17 @@ function onEdit(event) {
 
 
 
-// async getProjectData() {
-//   const url = `https://tracker.egamings.com/projects/${this.projectID}/wiki/Shared_Info.xml?key=${this.redmineKey}`;
-//   Browser.msgBox(url);
-//   const xml = await UrlFetchApp.fetch(url, {
-//     contentType: 'application/xml; charset=utf-8'
-//   }).getContentText();
+  // async getProjectData() {
+  //   const url = `https://tracker.egamings.com/projects/${this.projectID}/wiki/Shared_Info.xml?key=${this.redmineKey}`;
+  //   Browser.msgBox(url);
+  //   const xml = await UrlFetchApp.fetch(url, {
+  //     contentType: 'application/xml; charset=utf-8'
+  //   }).getContentText();
 
-//   const doc = XmlService.parse(xml);
-//   Browser.msgBox(`has root: ${doc.hasRootElement}`);
-//   const root = doc.getRootElement();
-//   const text = root.getText();
-//   // const text = root.getChild('text');
-//   Browser.msgBox(text);
-// }
+  //   const doc = XmlService.parse(xml);
+  //   Browser.msgBox(`has root: ${doc.hasRootElement}`);
+  //   const root = doc.getRootElement();
+  //   const text = root.getText();
+  //   // const text = root.getChild('text');
+  //   Browser.msgBox(text);
+  // }
