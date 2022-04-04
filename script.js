@@ -11,14 +11,16 @@ class application {
     this.projectNameColumnIndex = 2;
 
     this.trackedColumns = {
-      'statusColumnIndex': 15,
-      'pmColumnIndex': 8,
+      'status': {'titleTable': 'Статус', 'titleRedmine': 'Статус', 'index': 15 },
+      'pm': {'titleTable': 'ПМ отв-й', titleRedmine: 'Ответственный PM', index: 8 },
+      // 'statusColumnIndex': 15,
+      // 'pmColumnIndex': 8,
     };
 
-    this.pmTitleTable = this.sheetProjects.getRange(1, this.trackedColumns.pmColumnIndex).getValue();
+    this.pmTitleTable = this.sheetProjects.getRange(1, this.trackedColumns.pm.index).getValue();
     this.pmTitleRedmine = 'Ответственный PM';
 
-    this.statusTitleTable = this.sheetProjects.getRange(1, this.trackedColumns.statusColumnIndex).getValue();
+    this.statusTitleTable = this.sheetProjects.getRange(1, this.trackedColumns.status.index).getValue();
     this.statusTitleRedmine = 'Статус';
 
     this.currentChange = {
@@ -78,19 +80,32 @@ class application {
 
     this.currentChange.projectName = this.getProjectName();
     // Browser.msgBox('before getProjectData');
-    await this.getProjectData(this.currentChange.projectName);
+
+    // TODO fill this.currentChange by table values
+    // await this.getProjectData(this.currentChange.projectName);
+    this.loadProjectDataFromTable();
 
     Browser.msgBox(JSON.stringify(this.currentChange));
 
-    this.writeToRedmine(this.currentChange);
+    this.publishToRedmine(this.currentChange);
   }
+
+    loadProjectDataFromTable() {
+      Browser.msgBox('loadProjectDataFromTable');
+      Object.keys(this.trackedColumns).forEach(key => {
+        const val = this.sheetProjects.getRange(this.range.getRowIndex(), this.trackedColumns[key].index).getValue();
+        Browser.msgBox(`val: ${val}`);
+        this.currentChange.properties[key] = val;
+      });
+      Browser.msgBox(JSON.stringify(this.currentChange));
+    }
 
 
   //{"Статус":"Active Dev","Ответственный PM":"\"Andrew Boyarchuk\":https://egamings.slack.com/team/U01HWENP170"}
   // *Статус*: Active Dev\r\n*Ответственный PM*: "Andrew Boyarchuk":https://egamings.slack.com/team/U01HWENP170 - wiki
-  writeToRedmine(changes) {
-    const redmineAlias = this.getProjectRedmineAlias(this.currentChange.projectName);
-    const props = this.currentChange.properties;
+  publishToRedmine(change) {
+    const redmineAlias = this.getProjectRedmineAlias(change.projectName);
+    const props = change.properties;
     const url = `https://tracker.egamings.com/projects/${redmineAlias}/wiki/Shared_Info.json?key=e2306b943c5e70ff7ba20b8bcfa95b289d78e103`;
     let textContent = '';
 
@@ -111,7 +126,14 @@ class application {
   }
 
   isColumnTracked(columnNumber) {
-    return Object.values(this.trackedColumns).includes(Math.trunc(columnNumber));
+    let result = false;
+    Object.entries(this.trackedColumns).map((elem) => elem[1].index).forEach(item => {
+      if (Math.trunc(columnNumber) === Math.trunc(item)) {
+        result = true;
+      }
+    });
+
+    return result;
   }
 
   isProjectsSheetEdited() {
@@ -224,6 +246,7 @@ function onEdit(event) {
   app.range = event.range;
 
   Browser.msgBox('onEdit start');
+  // Browser.msgBox(`app.isColumnTracked: ${app.isColumnTracked(event.range.getColumn())}`);
 
   if ( ( event.source.getActiveSheet().getName() === app.sheetProjects.getName() )
     && app.isTrackedProjectChange(event.range)
