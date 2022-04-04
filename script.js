@@ -9,10 +9,17 @@ class application {
     this.newValue = undefined;
 
     this.projectNameColumnIndex = 2;
+
     this.trackedColumns = {
       'statusColumnIndex': 15,
       'pmColumnIndex': 8,
     };
+
+    this.pmTitleTable = this.sheetProjects.getRange(1, this.trackedColumns.pmColumnIndex).getValue();
+    this.pmTitleRedmine = 'Ответственный PM';
+
+    this.statusTitleTable = this.sheetProjects.getRange(1, this.trackedColumns.statusColumnIndex).getValue();
+    this.statusTitleRedmine = 'Статус';
 
     this.currentChange = {
       'projectName': undefined,
@@ -165,7 +172,9 @@ class application {
     const pos = strProperty.indexOf(strSplit) + strSplit.length;
 
     const propName = strProperty.substring(1, pos - strSplit.length);
-    const propValue = strProperty.substring(pos);
+    // const propValue = strProperty.substring(pos);
+    const propValue = strProperty.includes(this.pmTitleRedmine) ? this.extractUserName(strProperty.substring(pos)) : strProperty.substring(pos);
+
     // Logger.log(key);
     // Logger.log(value);
     // return extractName(value);
@@ -177,10 +186,10 @@ class application {
   }
 
   // "Andrew Boyarchuk":https://egamings.slack.com/team/U01HWENP170
-  extractName(rawName) {
+  extractUserName(rawName) {
     const splitStr = `":https://egamings.slack.com`;
     const pos = rawName.indexOf(splitStr);
-    Logger.log(rawName.substring(1, pos));
+    return rawName.substring(1, pos);
   }
 
   getSlackID(username) {
@@ -206,6 +215,7 @@ app = new application();
 
 function onOpen() {
   Browser.msgBox(`onOpen`);
+
   app.trackedProjects = app.getTrackedProjects();
   // Browser.msgBox(app.trackedProjects);
 }
