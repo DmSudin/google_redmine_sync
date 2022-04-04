@@ -12,7 +12,7 @@ class application {
 
     this.trackedColumns = {
       'status': {'titleTable': 'Статус', 'titleRedmine': 'Статус', 'index': 15 },
-      'pm': {'titleTable': 'ПМ отв-й', titleRedmine: 'Ответственный PM', index: 8 },
+      'pm': {'titleTable': 'ПМ отв-й', 'titleRedmine': 'Ответственный PM', index: 8 },
       // 'statusColumnIndex': 15,
       // 'pmColumnIndex': 8,
     };
@@ -109,11 +109,14 @@ class application {
     const url = `https://tracker.egamings.com/projects/${redmineAlias}/wiki/Shared_Info.json?key=e2306b943c5e70ff7ba20b8bcfa95b289d78e103`;
     let textContent = '';
 
+
+    //*status*: Active Dev *pm*: 333
     Object.keys(props).forEach(key => {
-      textContent += `*${key}*: ${props[key]}\r\n`;
+      //TODO continue 1: add slack to the name prop
+      textContent += `*${this.trackedColumns[key].titleRedmine}*: ${props[key]}\r\n`;
     });
     Browser.msgBox(`text content (publishToRedmine): ${textContent}`);
-    //    continue: upload data to redmine
+    //    continue 2: upload data to redmine
   }
 
   isTrackedFieldsChanged() {
