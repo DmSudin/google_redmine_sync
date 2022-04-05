@@ -104,7 +104,6 @@ class application {
   //{"Статус":"Active Dev","Ответственный PM":"\"Andrew Boyarchuk\":https://egamings.slack.com/team/U01HWENP170"}
 
   publishToRedmine(change) {
-    Browser.msgBox('publish to redmine');
     const redmineAlias = this.getProjectRedmineAlias(change.projectName);
     const url = `https://tracker.egamings.com/projects/${redmineAlias}/wiki/Shared_Info.json?key=e2306b943c5e70ff7ba20b8bcfa95b289d78e103`;
     let textContent = '';
@@ -121,7 +120,12 @@ class application {
       // Browser.msgBox(`key = ${JSON.stringify(this.trackedColumns[key])}`);
 
       const propName = this.trackedColumns[key].titleRedmine;
-      const propValue = props[key];
+      let propValue = '';
+
+      if ((propName) === this.trackedColumns.pm.titleRedmine) {
+        propValue = `\"${props[key]}\":https://egamings.slack.com/team/${this.getSlackLink(props[key])}`;
+      } else propValue = props[key];
+
       textContent += `*${propName}*: ${propValue}\r\n`;
       //TODO continue 1: add slack to the name prop
     });
