@@ -103,7 +103,7 @@ class application {
 
   //{"Статус":"Active Dev","Ответственный PM":"\"Andrew Boyarchuk\":https://egamings.slack.com/team/U01HWENP170"}
 
-  publishToRedmine(change) {
+  async publishToRedmine(change) {
     const redmineAlias = this.getProjectRedmineAlias(change.projectName);
     const url = `https://tracker.egamings.com/projects/${redmineAlias}/wiki/Shared_Info.json?key=e2306b943c5e70ff7ba20b8bcfa95b289d78e103`;
     let textContent = '';
@@ -130,7 +130,23 @@ class application {
       //TODO continue 1: add slack to the name prop
     });
 
-    Browser.msgBox(`text content (publishToRedmine): ${textContent}`);
+    const options = {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: {
+        "wiki_page": {
+          "text": `${textContent}`,
+          "uploads": [],
+        }
+      }
+    };
+
+    const response = await UrlFetchApp.fetch(url, options);
+    Browser.msgBox(`responce: ${response.getContentText()}`);
+
+
 
       // let propValue = '';
       // switch (propName) {
@@ -302,7 +318,48 @@ function onEdit(event) {
   }
 }
 
+async function publish() {
+  const url = `https://tracker.egamings.com/projects/tk-x-time-2/wiki/Shared_Info.json?key=e2306b943c5e70ff7ba20b8bcfa95b289d78e103`;
 
+      const options =
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: {
+          "wiki_page": {
+            "text": `*Статус*: Active Dev1\r\n*Ответственный PM*: \"Andrew Boyarchuk\":https://egamings.slack.com/team/U01HWENP170\r\n`,
+            "uploads": [],
+          }
+        }
+    };
+
+    const data =
+      {
+        "wiki_page": {
+          "text": "*Статус*: Active Dev1",
+        },
+      }
+
+    const options2 =
+      {
+        'method': 'put',
+        'contentType': 'application/json',
+        'body': JSON.stringify(data),
+        // "muteHttpExceptions" : true
+      }
+
+    // const response = await UrlFetchApp.fetch(url, options).getContentText();
+    const response = await UrlFetchApp.fetch(url, options2);
+
+    Logger.log(response.getContentText());
+
+
+
+    // Logger.log(response.getContentText());
+
+}
 
 
 
