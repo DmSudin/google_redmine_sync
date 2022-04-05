@@ -12,7 +12,7 @@ class application {
 
     this.trackedColumns = {
       'status': {'titleTable': 'Статус', 'titleRedmine': 'Статус', 'index': 15 },
-      'pm': {'titleTable': 'ПМ отв-й', 'titleRedmine': 'Ответственный PM', index: 8 },
+      'pm': {'titleTable': 'ПМ отв-й', 'titleRedmine': 'Ответственный PM', 'index': 8 },
       // 'statusColumnIndex': 15,
       // 'pmColumnIndex': 8,
     };
@@ -90,7 +90,7 @@ class application {
     this.publishToRedmine(this.currentChange);
   }
 
-    loadProjectDataFromTable() {
+  loadProjectDataFromTable() {
       // Browser.msgBox('loadProjectDataFromTable');
       Object.keys(this.trackedColumns).forEach(key => {
         const val = this.sheetProjects.getRange(this.range.getRowIndex(), this.trackedColumns[key].index).getValue();
@@ -98,25 +98,57 @@ class application {
         this.currentChange.properties[key] = val;
       });
       // Browser.msgBox(JSON.stringify(this.currentChange));
-    }
+  }
 
 
   //{"Статус":"Active Dev","Ответственный PM":"\"Andrew Boyarchuk\":https://egamings.slack.com/team/U01HWENP170"}
-  // *Статус*: Active Dev\r\n*Ответственный PM*: "Andrew Boyarchuk":https://egamings.slack.com/team/U01HWENP170 - wiki
+
   publishToRedmine(change) {
+    Browser.msgBox('publish to redmine');
     const redmineAlias = this.getProjectRedmineAlias(change.projectName);
-    const props = change.properties;
     const url = `https://tracker.egamings.com/projects/${redmineAlias}/wiki/Shared_Info.json?key=e2306b943c5e70ff7ba20b8bcfa95b289d78e103`;
     let textContent = '';
 
+    const props = change.properties; //props: {"status":5,"pm":"Artjoms Raznaks"}
 
     //*status*: Active Dev *pm*: 333
+    // Browser.msgBox(`keys(props)${Object.keys(props)}`);
     Object.keys(props).forEach(key => {
+      // Browser.msgBox(`${key}`); // 'status', 'pm'
+
+
+      // key = {"titleTable":"ПМ отв-й","titleRedmine":"Ответственный PM","index":8}
+      // Browser.msgBox(`key = ${JSON.stringify(this.trackedColumns[key])}`);
+
+      const propName = this.trackedColumns[key].titleRedmine;
+      const propValue = props[key];
+      textContent += `*${propName}*: ${propValue}\r\n`;
       //TODO continue 1: add slack to the name prop
-      textContent += `*${this.trackedColumns[key].titleRedmine}*: ${props[key]}\r\n`;
     });
+
     Browser.msgBox(`text content (publishToRedmine): ${textContent}`);
-    //    continue 2: upload data to redmine
+
+      // let propValue = '';
+      // switch (propName) {
+
+      //   case this.trackedColumns.pm.titleRedmine:
+      //   //"\"Andrew Boyarchuk\":https://egamings.slack.com/team/U01HWENP170"
+      //   //"\"Artjoms Raznaks\":https://egamings.slack.com/team/U01F8PRPWCD"
+      //     Browser.msgBox(`props[key]: ${props[key]}`);
+      //     propValue = `\"${props[key]}\":https://egamings.slack.com/team/${this.getSlackLink(props[key])}`;
+      //     break;
+
+      //   default:
+      //     propValue = props[key];
+      //     break;
+      // }
+
+      // *Статус*: Active Dev\r\n*Ответственный PM*: "Andrew Boyarchuk":https://egamings.slack.com/team/U01HWENP170 - wiki
+
+
+
+
+    //   TODO continue 2: upload data to redmine
   }
 
   isTrackedFieldsChanged() {
@@ -188,7 +220,6 @@ class application {
     // return result;
 
     // Logger.log(result);
-    // Logger.log(getSlackID('Andrew Boyarchuk'));
   }
 
   getProperty(strProperty) { //rename ?
@@ -217,15 +248,15 @@ class application {
     return rawName.substring(1, pos);
   }
 
-  getSlackID(username) {
+  getSlackLink(username) {
     //TODO case: no such username
+
     let result = '';
     const usernamesColumnIndex = 1;
     const slackIdColumnIndex = 2;
 
     const lastRow = this.sheetSettings.getLastRow();
     for (let i = 1; i <= lastRow; i++) {
-      Logger.log(this.sheetSettings.getRange(i, 1).getValue());
       if (this.sheetSettings.getRange(i, usernamesColumnIndex).getValue() === username) {
         result =  this.sheetSettings.getRange(i, slackIdColumnIndex).getValue();
         break;
