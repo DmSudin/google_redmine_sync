@@ -321,43 +321,57 @@ function onEdit(event) {
 async function publish() {
   const url = `https://tracker.egamings.com/projects/tk-x-time-2/wiki/Shared_Info.json?key=e2306b943c5e70ff7ba20b8bcfa95b289d78e103`;
 
-      const options =
-      {
+      const options = {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
         },
         body: {
           "wiki_page": {
-            "text": `*Статус*: Active Dev1\r\n*Ответственный PM*: \"Andrew Boyarchuk\":https://egamings.slack.com/team/U01HWENP170\r\n`,
+            "text": `Статус Active Dev1`,
             "uploads": [],
           }
         }
     };
 
-    const data =
+    const dataJSON = {
+      "wiki_page":
       {
-        "wiki_page": {
-          "text": "*Статус*: Active Dev1",
-        },
-      }
+        "title":"Shared_Info",
+        "parent":{"title":"Wiki"},
+        "text": "Статус: Active DevTEST",
+      },
+    };
 
-    const options2 =
+    const dataXML = `<?xml version="1.0"?>
+<wiki_page>
+  <text>Status - Active Dev</text>
+  <comments>some comment</comments>
+</wiki_page>`;
+
+    const optionsJSON =
       {
         'method': 'put',
         'contentType': 'application/json',
-        'body': JSON.stringify(data),
+        'body': JSON.stringify(dataJSON),
         // "muteHttpExceptions" : true
+      };
+
+    const optionsXML =
+      {
+        'method': 'put',
+        'contentType': 'application/xml',
+        'body': dataXML,
       }
 
     // const response = await UrlFetchApp.fetch(url, options).getContentText();
-    const response = await UrlFetchApp.fetch(url, options2);
 
-    Logger.log(response.getContentText());
+    const responseJSON = await UrlFetchApp.fetch(url, optionsJSON);
+    Logger.log(responseJSON.getContentText());
 
 
-
-    // Logger.log(response.getContentText());
+    // const responseXML = await UrlFetchApp.fetch(url, optionsXML);
+    // Logger.log(responseXML.getContentText());
 
 }
 
