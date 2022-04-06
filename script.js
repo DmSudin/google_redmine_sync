@@ -130,17 +130,18 @@ class application {
       //TODO continue 1: add slack to the name prop
     });
 
-    const options = {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json'
+
+    const data = {
+      "wiki_page":
+      {
+        "text": `${textContent}`,
       },
-      body: {
-        "wiki_page": {
-          "text": `${textContent}`,
-          "uploads": [],
-        }
-      }
+    };
+
+    const options = {
+      method: 'put',
+      'contentType': 'application/json',
+      'payload': JSON.stringify(data),
     };
 
     const response = await UrlFetchApp.fetch(url, options);
@@ -337,8 +338,6 @@ async function publish() {
     const dataJSON = {
       "wiki_page":
       {
-        "title":"Shared_Info",
-        "parent":{"title":"Wiki"},
         "text": "Статус: Active DevTEST",
       },
     };
