@@ -132,10 +132,9 @@ class application {
     const response = await UrlFetchApp.fetch(url, options);
 
     if (response.getResponseCode() === 204) { // Rest_WikiPages API
-      const projectName  = this.getProjectName();
-      const redmineAlias = this.getProjectRedmineAlias(projectName);
-
-      Browser.msgBox(`<a href="https://tracker.egamings.com/projects/tk-x-time-2/wiki/Shared_Info">X-Time</a>`);
+      const projectName = this.getProjectName();
+      Browser.msgBox(`Изменения по проекту ${projectName} внесены в Redmine Wiki`);
+      // this.showModal(redmineAlias, projectName);
     } else Browser.msgBox(`Что-то пошло не так при внесении изменений в Redmine Wiki`);
 
   }
@@ -252,6 +251,15 @@ class application {
       }
     }
     return result;
+  }
+
+  showModal(redmineAlias, projectName) {
+  var url = `https://tracker.egamings.com/projects/${redmineAlias}/wiki/Shared_Info`;
+  var htmlString = `<p>Изменения в проекте ${projectName} занесены в <a href="${url}" target="_blank">Redmine Wiki</a> </p>
+  <p><input type="button" value="OK" onclick="google.script.close();" /></p>`  // fix
+
+  var html = HtmlService.createHtmlOutput(htmlString).setHeight(4000);
+  SpreadsheetApp.getUi().showModalDialog(html, 'Success');
   }
 
 }
