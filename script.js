@@ -94,14 +94,10 @@ class application {
       });
   }
 
-
-  //{"Статус":"Active Dev","Ответственный PM":"\"Andrew Boyarchuk\":https://egamings.slack.com/team/U01HWENP170"}
-
   async publishToRedmine(change) {
     const redmineAlias = this.getProjectRedmineAlias(change.projectName);
     const url = `https://tracker.egamings.com/projects/${redmineAlias}/wiki/Shared_Info.json?key=e2306b943c5e70ff7ba20b8bcfa95b289d78e103`;
     let textContent = '';
-
     const props = change.properties;
 
     Object.keys(props).forEach(key => {
@@ -144,7 +140,6 @@ class application {
   }
 
   isManyCellsChanged() {
-      //TODO reachable case?
       return ((this.range.getNumColumns() !==1) || (this.range.getNumRows() !== 1));
   }
 
@@ -160,13 +155,11 @@ class application {
   }
 
   isProjectsSheetEdited() {
-    // Browser.msgBox(this.source.getActiveSheet().getName());
     return this.source.getActiveSheet().getName() === this.sheetProjects.getName();
   }
 
-  async getProjectData(projectName) {
+  async getProjectData(projectName) { // unused, but just for case, for the future
     const redmineAlias = this.getProjectRedmineAlias(projectName);
-
     const url = `https://tracker.egamings.com/projects/${redmineAlias}/wiki/Shared_Info.json?key=e2306b943c5e70ff7ba20b8bcfa95b289d78e103`;
 
     const responce = await UrlFetchApp.fetch(url, {
@@ -174,62 +167,33 @@ class application {
         }).getContentText();
 
     const result = JSON.parse(responce).wiki_page.text;
-
-    // Browser.msgBox(`responce = ${responce}`);
-    // Browser.msgBox(`raw string = ${result}`);
-
-    // Logger.log(json.wiki_page.text);
-    // Logger.log(`project data: ${this.getProjectData(json.wiki_page.text)}`);
-
     this.getProjectRedmineData(result);
   }
 
-  // *Статус*: Active Dev *Ответственный PM*: "Andrew Boyarchuk":https://egamings.slack.com/team/U01HWENP170
-  // [*Статус*: Active Dev, *Ответственный PM*: "Andrew Boyarchuk":https://egamings.slack.com/team/U01HWENP170, ]
-
-  getProjectRedmineData(rawText) {
-    const result = {};
-    //TODO refactoring
-
-    // *Статус*: Active Dev *Ответственный PM*: "Andrew Boyarchuk":https://egamings.slack.com/team/U01HWENP170
-    // Browser.msgBox(`rawText = ${rawText}`);
-
-
+  getProjectRedmineData(rawText) { // unused, but just for case, for the future
     const arr = rawText.split('\r\n');
     const regExp = `^[*][А-Яа-яA-Za-z ]+[*]: `;
     const resultArr = arr.filter(item => item.search(regExp) !== -1);
 
     for (let i = 0; i < resultArr.length; i++) {
-      const elem = this.getProperty(resultArr[i]);
+      const elem = this.extractProperty(resultArr[i]);
       this.currentChange.properties[elem.key] = elem.value;
     }
-
-    // Browser.msgBox(JSON.stringify(result));
-    // return result;
-
-    // Logger.log(result);
   }
 
-  getProperty(strProperty) { //rename ?
-    const result = new Object();
+  extractProperty(strProperty) {
     const strSplit = '*: ';
     const pos = strProperty.indexOf(strSplit) + strSplit.length;
 
     const propName = strProperty.substring(1, pos - strSplit.length);
-    // const propValue = strProperty.substring(pos);
     const propValue = strProperty.includes(this.pmTitleRedmine) ? this.extractUserName(strProperty.substring(pos)) : strProperty.substring(pos);
 
-    // Logger.log(key);
-    // Logger.log(value);
-    // return extractName(value);
-    // Browser.msgBox(`key: ${key}, value: ${value}`);
     return {
       key: propName,
       value: propValue
     };
   }
 
-  // "Andrew Boyarchuk":https://egamings.slack.com/team/U01HWENP170
   extractUserName(rawName) {
     const splitStr = `":https://egamings.slack.com`;
     const pos = rawName.indexOf(splitStr);
@@ -237,7 +201,7 @@ class application {
   }
 
   getSlackLink(username) {
-    //TODO case: no such username
+    // case: no such username
 
     let result = '';
     const usernamesColumnIndex = 1;
@@ -258,7 +222,7 @@ class application {
   var htmlString = `<p>Изменения в проекте ${projectName} занесены в <a href="${url}" target="_blank">Redmine Wiki</a> </p>
   <p><input type="button" value="OK" onclick="google.script.close();" /></p>`  // fix
 
-  var html = HtmlService.createHtmlOutput(htmlString).setHeight(4000);
+  var html = HtmlService.createHtmlOutput(htmlString).setHeight(500);
   SpreadsheetApp.getUi().showModalDialog(html, 'Success');
   }
 
@@ -267,10 +231,7 @@ class application {
 app = new application();
 
 function onOpen() {
-  Browser.msgBox(`onOpen`);
 
-  app.trackedProjects = app.getTrackedProjects();
-  // Browser.msgBox(app.trackedProjects);
 }
 
 function onEdit(event) {
@@ -281,8 +242,6 @@ function onEdit(event) {
     && ( app.isColumnTracked(event.range.getColumn()) )
     && (event.oldValue !== event.value)
     ) {
-      // Browser.msgBox('will handle this change');
-      // Browser.msgBox(`current project edited: ${app.currentChange.projectName}`);
 
     app.oldValue = event.oldValue;
     app.newValue = event.value;
