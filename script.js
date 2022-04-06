@@ -353,8 +353,7 @@ async function publish() {
       {
         'method': 'put',
         'contentType': 'application/json',
-        'body': JSON.stringify(dataJSON),
-        // "muteHttpExceptions" : true
+        'payload': JSON.stringify(dataJSON),
       };
 
     const optionsXML =
