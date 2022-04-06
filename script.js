@@ -1,55 +1,58 @@
 class application {
 
   constructor() {
-    this.sheetProjects = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Ответственные и проекты");
-    this.sheetSettings = SpreadsheetApp.getActive().getSheetByName('service_info');
 
-    this.range = undefined;
-    this.oldValue = undefined;
-    this.newValue = undefined;
+    this.reset();
+    this.init();
+  }
 
-    this.projectNameColumnIndex = 2;
-
-    this.trackedColumns = {
-      'status': {'titleTable': 'Статус', 'titleRedmine': 'Статус', 'index': 15 },
-      'pm': {'titleTable': 'ПМ отв-й', 'titleRedmine': 'Ответственный PM', 'index': 8 },
-    };
-
-    this.pmTitleTable = this.sheetProjects.getRange(1, this.trackedColumns.pm.index).getValue();
-    this.pmTitleRedmine = 'Ответственный PM';
-
-    this.statusTitleTable = this.sheetProjects.getRange(1, this.trackedColumns.status.index).getValue();
-    this.statusTitleRedmine = 'Статус';
+  reset() {
 
     this.currentChange = {
       'projectName': undefined,
       properties: {},
     };
 
-    this.trackedProjects = this.getTrackedProjects();
-    this.redmineKey = 'e2306b943c5e70ff7ba20b8bcfa95b289d78e103';
+    this.range = undefined;
+    this.oldValue = undefined;
+    this.newValue = undefined;
   }
 
-  reset() {
+  init() {
 
+    this.trackedColumns = {
+      'status': {'titleTable': 'Статус', 'titleRedmine': 'Статус', 'index': 15 },
+      'pm': {'titleTable': 'ПМ отв-й', 'titleRedmine': 'Ответственный PM', 'index': 8 },
+    };
+
+    this.sheetProjects = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Ответственные и проекты");
+    this.sheetSettings = SpreadsheetApp.getActive().getSheetByName('service_info');
+    this.projectNameColumnIndex = 2;
+
+    this.pmTitleTable = this.sheetProjects.getRange(1, this.trackedColumns.pm.index).getValue();
+    this.pmTitleRedmine = 'Ответственный PM';
+    this.statusTitleTable = this.sheetProjects.getRange(1, this.trackedColumns.status.index).getValue();
+    this.statusTitleRedmine = 'Статус';
+
+    this.redmineKey = 'e2306b943c5e70ff7ba20b8bcfa95b289d78e103';
+    this.trackedProjects = this.getTrackedProjects();
   }
 
   getTrackedProjects() {
-    //TODO case: exclude on-hold and closed projects
+    // case: exclude on-hold and closed projects ?
     const result = [];
     const redmineColumnIndex = 4;
     const projectColumnIndex = 5;
     const lastSheetRow = this.sheetSettings.getLastRow();
 
     const range = this.sheetSettings.getRange(`D2:D${lastSheetRow}`);
-    //TODO empty cell among range - getNextDataCell()
+    //possible bug - empty cell among range in service_info - getNextDataCell()
     const lastProjectsRowIndex = range.getNextDataCell(SpreadsheetApp.Direction.DOWN).getRowIndex();
 
     for (let i = 2; i<= lastProjectsRowIndex; i++) {
       const elem = new Object();
       elem.redmineAlias = this.sheetSettings.getRange(i, redmineColumnIndex).getValue();
       elem.projectName = this.sheetSettings.getRange(i, projectColumnIndex).getValue();
-
       result.push(elem);
     }
 
@@ -74,30 +77,21 @@ class application {
   }
 
   async handleChange() {
-    //TODO case: handle depends on edited sheet
 
     if ( this.isManyCellsChanged() ) {
       return;
     }
 
     this.currentChange.projectName = this.getProjectName();
-
-    // TODO fill this.currentChange by table values
     this.loadProjectDataFromTable();
-
-    // Browser.msgBox(`this.currentChange: ${JSON.stringify(this.currentChange)}`);
-
     this.publishToRedmine(this.currentChange);
   }
 
   loadProjectDataFromTable() {
-      // Browser.msgBox('loadProjectDataFromTable');
       Object.keys(this.trackedColumns).forEach(key => {
         const val = this.sheetProjects.getRange(this.range.getRowIndex(), this.trackedColumns[key].index).getValue();
-        // Browser.msgBox(`val: ${val}`);
         this.currentChange.properties[key] = val;
       });
-      // Browser.msgBox(JSON.stringify(this.currentChange));
   }
 
 
@@ -108,17 +102,9 @@ class application {
     const url = `https://tracker.egamings.com/projects/${redmineAlias}/wiki/Shared_Info.json?key=e2306b943c5e70ff7ba20b8bcfa95b289d78e103`;
     let textContent = '';
 
-    const props = change.properties; //props: {"status":5,"pm":"Artjoms Raznaks"}
+    const props = change.properties;
 
-    //*status*: Active Dev *pm*: 333
-    // Browser.msgBox(`keys(props)${Object.keys(props)}`);
     Object.keys(props).forEach(key => {
-      // Browser.msgBox(`${key}`); // 'status', 'pm'
-
-
-      // key = {"titleTable":"ПМ отв-й","titleRedmine":"Ответственный PM","index":8}
-      // Browser.msgBox(`key = ${JSON.stringify(this.trackedColumns[key])}`);
-
       const propName = this.trackedColumns[key].titleRedmine;
       let propValue = '';
 
@@ -127,9 +113,8 @@ class application {
       } else propValue = props[key];
 
       textContent += `*${propName}*: ${propValue}\r\n`;
-      //TODO continue 1: add slack to the name prop
+      // add slack to the name prop
     });
-
 
     const data = {
       "wiki_page":
@@ -145,35 +130,14 @@ class application {
     };
 
     const response = await UrlFetchApp.fetch(url, options);
-    // Browser.msgBox(JSON.stringify(response.getAllHeaders()));
-    if (response.getResponseCode() === 204) {
-      const columnName = this.range.getValue
-      Browser.msgBox('Изменения сохранены в Redmine Wiki');
+
+    if (response.getResponseCode() === 204) { // Rest_WikiPages API
+      const projectName  = this.getProjectName();
+      const redmineAlias = this.getProjectRedmineAlias(projectName);
+
+      Browser.msgBox(`<a href="https://tracker.egamings.com/projects/tk-x-time-2/wiki/Shared_Info">X-Time</a>`);
     } else Browser.msgBox(`Что-то пошло не так при внесении изменений в Redmine Wiki`);
 
-
-
-      // let propValue = '';
-      // switch (propName) {
-
-      //   case this.trackedColumns.pm.titleRedmine:
-      //   //"\"Andrew Boyarchuk\":https://egamings.slack.com/team/U01HWENP170"
-      //   //"\"Artjoms Raznaks\":https://egamings.slack.com/team/U01F8PRPWCD"
-      //     Browser.msgBox(`props[key]: ${props[key]}`);
-      //     propValue = `\"${props[key]}\":https://egamings.slack.com/team/${this.getSlackLink(props[key])}`;
-      //     break;
-
-      //   default:
-      //     propValue = props[key];
-      //     break;
-      // }
-
-      // *Статус*: Active Dev\r\n*Ответственный PM*: "Andrew Boyarchuk":https://egamings.slack.com/team/U01HWENP170 - wiki
-
-
-
-
-    //   TODO continue 2: upload data to redmine
   }
 
   isTrackedFieldsChanged() {
