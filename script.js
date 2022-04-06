@@ -24,14 +24,15 @@ class application {
       'status': {'titleTable': 'Статус', 'titleRedmine': 'Статус', 'index': 15 },
       'pm': {'titleTable': 'ПМ отв-й', 'titleRedmine': 'Ответственный PM', 'index': 8 },
     };
+    this.tableTitlesRowIndex = 2;
 
     this.sheetProjects = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Ответственные и проекты");
-    this.sheetSettings = SpreadsheetApp.getActive().getSheetByName('service_info');
+    this.sheetSettings = SpreadsheetApp.getActive().getSheetByName('Redmine_sync');
     this.projectNameColumnIndex = 2;
 
-    this.pmTitleTable = this.sheetProjects.getRange(1, this.trackedColumns.pm.index).getValue();
+    this.pmTitleTable = this.sheetProjects.getRange(this.tableTitlesRowIndex, this.trackedColumns.pm.index).getValue();
     this.pmTitleRedmine = 'Ответственный PM';
-    this.statusTitleTable = this.sheetProjects.getRange(1, this.trackedColumns.status.index).getValue();
+    this.statusTitleTable = this.sheetProjects.getRange(this.tableTitlesRowIndex, this.trackedColumns.status.index).getValue();
     this.statusTitleRedmine = 'Статус';
 
     this.redmineKey = 'e2306b943c5e70ff7ba20b8bcfa95b289d78e103';
@@ -134,6 +135,8 @@ class application {
       // this.showModal(redmineAlias, projectName);
     } else Browser.msgBox(`Что-то пошло не так при внесении изменений в Redmine Wiki`);
 
+    this.reset();
+
   }
 
   isTrackedFieldsChanged() {
@@ -232,11 +235,10 @@ class application {
 
 app = new application();
 
-function onOpen() {
+function onEdit(event)
+{
 
-}
-
-function onEdit(event) {
+  //Redmine sync
   app.range = event.range;
 
   if ( ( event.source.getActiveSheet().getName() === app.sheetProjects.getName() )
@@ -251,4 +253,30 @@ function onEdit(event) {
 
     app.handleChange();
   }
+
+  var r = event.source.getActiveRange();
+  var idCol = event.range.getColumn();
+  if (idCol <= 22) {
+    let userMail = Session.getActiveUser().getEmail();
+    let currentMessage = r.getComment();
+    if (userMail) {
+      userMail = "\n" + userRmail;
+    }
+    let message = "Changed: " + getTime() + userMail + '\n\n' + currentMessage;
+    // r.setComment(message);
+    //Logger.log(r.getComment());
+  }
+
+
+
+
+}
+
+function getTime() {
+  var today = new Date();
+  return Utilities.formatDate(today, 'GMT+03:00', 'dd.MM.yy HH:mm');
+}
+
+function consol() {
+  Logger.log(Session.getActiveUser().getEmail());
 }
