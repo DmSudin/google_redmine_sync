@@ -105,7 +105,8 @@ class application {
       let propValue = '';
 
       if ((propName) === this.trackedColumns.pm.titleRedmine) {
-        propValue = `\"${props[key]}\":https://egamings.slack.com/team/${this.getSlackLink(props[key])}`;
+        // propValue = `\"${props[key]}\":https://egamings.slack.com/team/${this.getSlackLink(props[key])}`;
+        propValue = this.getSlackLink(props[key]);
       } else propValue = props[key];
 
       textContent += `*${propName}*: ${propValue}\r\n`;
@@ -201,29 +202,30 @@ class application {
   }
 
   getSlackLink(username) {
-    // case: no such username
 
-    let result = '';
+    let slackID = '';
     const usernamesColumnIndex = 1;
     const slackIdColumnIndex = 2;
 
     const lastRow = this.sheetSettings.getLastRow();
     for (let i = 1; i <= lastRow; i++) {
       if (this.sheetSettings.getRange(i, usernamesColumnIndex).getValue() === username) {
-        result =  this.sheetSettings.getRange(i, slackIdColumnIndex).getValue();
+        slackID =  this.sheetSettings.getRange(i, slackIdColumnIndex).getValue();
         break;
       }
     }
-    return result;
+    if (!slackID) {
+      return username;
+    } else return `\"${username}\":https://egamings.slack.com/team/${slackID}`;
   }
 
   showModal(redmineAlias, projectName) {
-  var url = `https://tracker.egamings.com/projects/${redmineAlias}/wiki/Shared_Info`;
-  var htmlString = `<p>Изменения в проекте ${projectName} занесены в <a href="${url}" target="_blank">Redmine Wiki</a> </p>
-  <p><input type="button" value="OK" onclick="google.script.close();" /></p>`  // fix
+    var url = `https://tracker.egamings.com/projects/${redmineAlias}/wiki/Shared_Info`;
+    var htmlString = `<p>Изменения в проекте ${projectName} занесены в <a href="${url}" target="_blank">Redmine Wiki</a> </p>
+    <p><input type="button" value="OK" onclick="google.script.close();" /></p>`  // fix
 
-  var html = HtmlService.createHtmlOutput(htmlString).setHeight(500);
-  SpreadsheetApp.getUi().showModalDialog(html, 'Success');
+    var html = HtmlService.createHtmlOutput(htmlString).setHeight(500);
+    SpreadsheetApp.getUi().showModalDialog(html, 'Success');
   }
 
 }
