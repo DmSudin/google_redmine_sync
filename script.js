@@ -13,8 +13,6 @@ class application {
     this.trackedColumns = {
       'status': {'titleTable': 'Статус', 'titleRedmine': 'Статус', 'index': 15 },
       'pm': {'titleTable': 'ПМ отв-й', 'titleRedmine': 'Ответственный PM', 'index': 8 },
-      // 'statusColumnIndex': 15,
-      // 'pmColumnIndex': 8,
     };
 
     this.pmTitleTable = this.sheetProjects.getRange(1, this.trackedColumns.pm.index).getValue();
@@ -30,6 +28,10 @@ class application {
 
     this.trackedProjects = this.getTrackedProjects();
     this.redmineKey = 'e2306b943c5e70ff7ba20b8bcfa95b289d78e103';
+  }
+
+  reset() {
+
   }
 
   getTrackedProjects() {
@@ -79,13 +81,11 @@ class application {
     }
 
     this.currentChange.projectName = this.getProjectName();
-    // Browser.msgBox('before getProjectData');
 
     // TODO fill this.currentChange by table values
-    // await this.getProjectData(this.currentChange.projectName);
     this.loadProjectDataFromTable();
 
-    Browser.msgBox(`this.currentChange: ${JSON.stringify(this.currentChange)}`);
+    // Browser.msgBox(`this.currentChange: ${JSON.stringify(this.currentChange)}`);
 
     this.publishToRedmine(this.currentChange);
   }
@@ -145,7 +145,11 @@ class application {
     };
 
     const response = await UrlFetchApp.fetch(url, options);
-    Browser.msgBox(`responce: ${response.getContentText()}`);
+    // Browser.msgBox(JSON.stringify(response.getAllHeaders()));
+    if (response.getResponseCode() === 204) {
+      const columnName = this.range.getValue
+      Browser.msgBox('Изменения сохранены в Redmine Wiki');
+    } else Browser.msgBox(`Что-то пошло не так при внесении изменений в Redmine Wiki`);
 
 
 
@@ -300,15 +304,12 @@ function onOpen() {
 function onEdit(event) {
   app.range = event.range;
 
-  // Browser.msgBox('onEdit start');
-  // Browser.msgBox(`app.isColumnTracked: ${app.isColumnTracked(event.range.getColumn())}`);
-
   if ( ( event.source.getActiveSheet().getName() === app.sheetProjects.getName() )
     && app.isTrackedProjectChange(event.range)
     && ( app.isColumnTracked(event.range.getColumn()) )
     && (event.oldValue !== event.value)
     ) {
-      Browser.msgBox('will handle this change');
+      // Browser.msgBox('will handle this change');
       // Browser.msgBox(`current project edited: ${app.currentChange.projectName}`);
 
     app.oldValue = event.oldValue;
@@ -318,96 +319,3 @@ function onEdit(event) {
     app.handleChange();
   }
 }
-
-async function publish() {
-  const url = `https://tracker.egamings.com/projects/tk-x-time-2/wiki/Shared_Info.json?key=e2306b943c5e70ff7ba20b8bcfa95b289d78e103`;
-
-      const options = {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: {
-          "wiki_page": {
-            "text": `Статус Active Dev1`,
-            "uploads": [],
-          }
-        }
-    };
-
-    const dataJSON = {
-      "wiki_page":
-      {
-        "text": "Статус: Active DevTEST",
-      },
-    };
-
-    const dataXML = `<?xml version="1.0"?>
-<wiki_page>
-  <text>Status - Active Dev</text>
-  <comments>some comment</comments>
-</wiki_page>`;
-
-    const optionsJSON =
-      {
-        'method': 'put',
-        'contentType': 'application/json',
-        'payload': JSON.stringify(dataJSON),
-      };
-
-    const optionsXML =
-      {
-        'method': 'put',
-        'contentType': 'application/xml',
-        'body': dataXML,
-      }
-
-    // const response = await UrlFetchApp.fetch(url, options).getContentText();
-
-    const responseJSON = await UrlFetchApp.fetch(url, optionsJSON);
-    Logger.log(responseJSON.getContentText());
-
-
-    // const responseXML = await UrlFetchApp.fetch(url, optionsXML);
-    // Logger.log(responseXML.getContentText());
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  // async getProjectData() {
-  //   const url = `https://tracker.egamings.com/projects/${this.projectID}/wiki/Shared_Info.xml?key=${this.redmineKey}`;
-  //   Browser.msgBox(url);
-  //   const xml = await UrlFetchApp.fetch(url, {
-  //     contentType: 'application/xml; charset=utf-8'
-  //   }).getContentText();
-
-  //   const doc = XmlService.parse(xml);
-  //   Browser.msgBox(`has root: ${doc.hasRootElement}`);
-  //   const root = doc.getRootElement();
-  //   const text = root.getText();
-  //   // const text = root.getChild('text');
-  //   Browser.msgBox(text);
-  // }
