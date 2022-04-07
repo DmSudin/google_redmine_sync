@@ -30,6 +30,8 @@ class application {
     this.sheetProjects = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Ответственные и проекты");
     this.sheetSettings = SpreadsheetApp.getActive().getSheetByName('Redmine_sync');
     this.projectNameColumnIndex = 2;
+
+    this.notifyDuration = 10;
     this.cellNotify = this.sheetProjects.getRange(1, 3).getCell(1, 1);
 
     this.pmTitleTable = this.sheetProjects.getRange(this.tableTitlesRowIndex, this.trackedColumns.pm.index).getValue();
@@ -225,14 +227,15 @@ class application {
   }
 
   showNotify(redmineAlias, projectName) {
-    let url = `https://tracker.egamings.com/projects/${redmineAlias}/wiki/Shared_Info`;
-    let text = `Изменения в проекте ${projectName} занесены в Redmine Wiki`; //todo hyperlink
+    let url = `https://tracker.egamings.com/projects/${redmineAlias}/wiki/`;
+    let text = `Изменения в проекте ${projectName} занесены в Redmine Wiki. Открыть >>`; //todo hyperlink
+    let textWithLink = SpreadsheetApp.newRichTextValue().setText(text).setLinkUrl(text.length - 10, text.length,  url).build();
 
     this.cellNotify.setBackgroundRGB(10,199, 145);
-    this.cellNotify.setValue(text);
-    SpreadsheetApp.flush();
+    this.cellNotify.setRichTextValue(textWithLink);
 
-    Utilities.sleep(4 * 1000);
+    SpreadsheetApp.flush();
+    Utilities.sleep(this.notifyDuration * 1000);
 
     this.cellNotify.setValue('');
     this.cellNotify.setBackgroundRGB(254, 254, 254);
