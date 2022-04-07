@@ -21,8 +21,9 @@ class application {
   init() {
 
     this.trackedColumns = {
-      'status': {'titleTable': 'Статус', 'titleRedmine': 'Статус', 'index': 15 },
-      'pm': {'titleTable': 'ПМ отв-й', 'titleRedmine': 'Ответственный PM', 'index': 8 },
+      'status': { 'titleTable': 'Статус', 'titleRedmine': 'Статус', 'index': 15 },
+      'pm': { 'titleTable': 'ПМ отв-й', 'titleRedmine': 'Ответственный PM', 'index': 8 },
+      'unitLead': {'titleTable': 'ЮнитЛид', 'titleRedmine': 'Ответственный Unit Lead', 'index': 10 }
     };
 
     this.tableTitlesRowIndex = 2;
@@ -38,13 +39,14 @@ class application {
     this.pmTitleRedmine = 'Ответственный PM';
     this.statusTitleTable = this.sheetProjects.getRange(this.tableTitlesRowIndex, this.trackedColumns.status.index).getValue();
     this.statusTitleRedmine = 'Статус';
+    this.unitLeadTitleTable = this.sheetProjects.getRange(this.tableTitlesRowIndex, this.trackedColumns.unitLead.index).getValue();
+    this.unitLeadTitleRedmine = 'Ответственный Unit Lead';
 
     this.redmineKey = 'e2306b943c5e70ff7ba20b8bcfa95b289d78e103';
     this.trackedProjects = this.getTrackedProjects();
   }
 
   getTrackedProjects() {
-    // case: exclude on-hold and closed projects ?
     const result = [];
     const redmineColumnIndex = 4;
     const projectColumnIndex = 5;
@@ -109,7 +111,7 @@ class application {
       const propName = this.trackedColumns[key].titleRedmine;
       let propValue = '';
 
-      if ((propName) === this.trackedColumns.pm.titleRedmine) {
+      if ( ((propName) === this.trackedColumns.pm.titleRedmine) || ((propName) === this.trackedColumns.unitLead.titleRedmine) ) {
         // propValue = `\"${props[key]}\":https://egamings.slack.com/team/${this.getSlackLink(props[key])}`;
         propValue = this.getSlackLink(props[key]);
       } else propValue = props[key];
