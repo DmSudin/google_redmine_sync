@@ -212,20 +212,26 @@ class application {
 
   getSlackLink(username) {
 
+    let usernameToOutput = username;
     let slackID = '';
     const usernamesColumnIndex = 1;
     const slackIdColumnIndex = 2;
+    const userNameAliasIndex = 3; // if userName is written by russian (UnitLeads), we output alias by english
 
     const lastRow = this.sheetSettings.getLastRow();
     for (let i = 1; i <= lastRow; i++) {
       if (this.sheetSettings.getRange(i, usernamesColumnIndex).getValue() === username) {
         slackID =  this.sheetSettings.getRange(i, slackIdColumnIndex).getValue();
+        const usernameAlias = this.sheetSettings.getRange(i, userNameAliasIndex).getValue();
+        if ( usernameAlias.length > 0 ) usernameToOutput = usernameAlias;
         break;
       }
     }
     if (!slackID) {
-      return username;
-    } else return `\"${username}\":https://egamings.slack.com/team/${slackID}`;
+      return usernameToOutput;
+    }
+
+    return `\"${usernameToOutput}\":https://egamings.slack.com/team/${slackID}`;
   }
 
   showNotify(redmineAlias, projectName) {
