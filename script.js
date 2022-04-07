@@ -24,11 +24,13 @@ class application {
       'status': {'titleTable': 'Статус', 'titleRedmine': 'Статус', 'index': 15 },
       'pm': {'titleTable': 'ПМ отв-й', 'titleRedmine': 'Ответственный PM', 'index': 8 },
     };
+
     this.tableTitlesRowIndex = 2;
 
     this.sheetProjects = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Ответственные и проекты");
     this.sheetSettings = SpreadsheetApp.getActive().getSheetByName('Redmine_sync');
     this.projectNameColumnIndex = 2;
+    this.cellNotify = this.sheetProjects.getRange(1, 3).getCell(1, 1);
 
     this.pmTitleTable = this.sheetProjects.getRange(this.tableTitlesRowIndex, this.trackedColumns.pm.index).getValue();
     this.pmTitleRedmine = 'Ответственный PM';
@@ -131,8 +133,8 @@ class application {
 
     if (response.getResponseCode() === 204) { // Rest_WikiPages API
       const projectName = this.getProjectName();
-      Browser.msgBox(`Изменения по проекту ${projectName} внесены в Redmine Wiki`);
-      // this.showModal(redmineAlias, projectName);
+      // Browser.msgBox(`Изменения по проекту ${projectName} внесены в Redmine Wiki`);
+      this.showNotify(redmineAlias, projectName);
     } else Browser.msgBox(`Что-то пошло не так при внесении изменений в Redmine Wiki`);
 
     this.reset();
@@ -222,13 +224,18 @@ class application {
     } else return `\"${username}\":https://egamings.slack.com/team/${slackID}`;
   }
 
-  showModal(redmineAlias, projectName) {
-    var url = `https://tracker.egamings.com/projects/${redmineAlias}/wiki/Shared_Info`;
-    var htmlString = `<p>Изменения в проекте ${projectName} занесены в <a href="${url}" target="_blank">Redmine Wiki</a> </p>
-    <p><input type="button" value="OK" onclick="google.script.close();" /></p>`  // fix
+  showNotify(redmineAlias, projectName) {
+    let url = `https://tracker.egamings.com/projects/${redmineAlias}/wiki/Shared_Info`;
+    let text = `Изменения в проекте ${projectName} занесены в Redmine Wiki`; //todo hyperlink
 
-    var html = HtmlService.createHtmlOutput(htmlString).setHeight(500);
-    SpreadsheetApp.getUi().showModalDialog(html, 'Success');
+    this.cellNotify.setBackgroundRGB(10,199, 145);
+    this.cellNotify.setValue(text);
+    SpreadsheetApp.flush();
+
+    Utilities.sleep(4 * 1000);
+
+    this.cellNotify.setValue('');
+    this.cellNotify.setBackgroundRGB(254, 254, 254);
   }
 
 }
@@ -279,4 +286,19 @@ function getTime() {
 
 function consol() {
   Logger.log(Session.getActiveUser().getEmail());
+}
+
+function showNotify() {
+  const sheetProjects = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Ответственные и проекты");
+  const cellNotify = sheetProjects.getRange(1, 3).getCell(1, 1);
+
+  // const val = cellNotify.getValue();
+  // Logger.log(`value=${val}`);
+  cellNotify.setBackgroundRGB(10,199, 145);
+  cellNotify.setValue('test');
+  SpreadsheetApp.flush();
+  Utilities.sleep(4 * 1000);
+
+  cellNotify.setValue('');
+  cellNotify.setBackgroundRGB(254, 254, 254);
 }
