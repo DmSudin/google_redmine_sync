@@ -1,7 +1,6 @@
 class application {
 
   constructor() {
-
     this.reset();
     this.init();
   }
@@ -112,12 +111,10 @@ class application {
       let propValue = '';
 
       if ( ((propName) === this.trackedColumns.pm.titleRedmine) || ((propName) === this.trackedColumns.unitLead.titleRedmine) ) {
-        // propValue = `\"${props[key]}\":https://egamings.slack.com/team/${this.getSlackLink(props[key])}`;
         propValue = this.getSlackLink(props[key]);
       } else propValue = props[key];
 
       textContent += `*${propName}*: ${propValue}\r\n`;
-      // add slack to the name prop
     });
 
     const data = {
@@ -216,7 +213,7 @@ class application {
     let slackID = '';
     const usernamesColumnIndex = 1;
     const slackIdColumnIndex = 2;
-    const userNameAliasIndex = 3; // if userName is written by russian (UnitLeads), we output alias by english
+    const userNameAliasIndex = 3; // if userName is in russian (e.g. Unit Lead), we output alias in english
 
     const lastRow = this.sheetSettings.getLastRow();
     for (let i = 1; i <= lastRow; i++) {
@@ -244,7 +241,10 @@ class application {
 
     SpreadsheetApp.flush();
     Utilities.sleep(this.notifyDuration * 1000);
+    this.clearNotify();
+  }
 
+  clearNotify() {
     this.cellNotify.setValue('');
     this.cellNotify.setBackgroundRGB(254, 254, 254);
   }
@@ -252,6 +252,10 @@ class application {
 }
 
 app = new application();
+
+function onOpen() {
+  app.clearNotify();
+}
 
 function onEdit(event)
 {
@@ -303,8 +307,6 @@ function showNotify() {
   const sheetProjects = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Ответственные и проекты");
   const cellNotify = sheetProjects.getRange(1, 3).getCell(1, 1);
 
-  // const val = cellNotify.getValue();
-  // Logger.log(`value=${val}`);
   cellNotify.setBackgroundRGB(10,199, 145);
   cellNotify.setValue('test');
   SpreadsheetApp.flush();
