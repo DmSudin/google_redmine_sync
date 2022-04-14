@@ -282,7 +282,7 @@ function onEdit(event)
     let userMail = Session.getActiveUser().getEmail();
     let currentMessage = r.getComment();
     if (userMail) {
-      userMail = "\n" + userRmail;
+      userMail = "\n" + userMail;
     }
     let message = "Changed: " + getTime() + userMail + '\n\n' + currentMessage;
     // r.setComment(message);
