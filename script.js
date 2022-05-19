@@ -25,6 +25,7 @@ class application {
       'unitLead': {'titleTable': 'ЮнитЛид', 'titleRedmine': 'Ответственный Unit Lead', 'index': 10 }
     };
 
+    this.tableURL = 'https://docs.google.com/spreadsheets/d/1pZtZn8cAxxPDzwQNAkPs_aLneZaTx7RpQrNN9OLh3cg';
     this.tableTitlesRowIndex = 2;
 
     this.sheetProjects = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Ответственные и проекты");
@@ -55,7 +56,7 @@ class application {
     //possible bug - empty cell among range in service_info - getNextDataCell()
     const lastProjectsRowIndex = range.getNextDataCell(SpreadsheetApp.Direction.DOWN).getRowIndex();
 
-    for (let i = 2; i<= lastProjectsRowIndex; i++) {
+    for (let i = 2; i <= lastProjectsRowIndex; i++) {
       const elem = new Object();
       elem.redmineAlias = this.sheetSettings.getRange(i, redmineColumnIndex).getValue();
       elem.projectName = this.sheetSettings.getRange(i, projectColumnIndex).getValue();
@@ -103,7 +104,7 @@ class application {
   async publishToRedmine(change) {
     const redmineAlias = this.getProjectRedmineAlias(change.projectName);
     const url = `https://tracker.egamings.com/projects/${redmineAlias}/wiki/Shared_Info.json?key=e2306b943c5e70ff7ba20b8bcfa95b289d78e103`;
-    let textContent = '';
+    let textContent = `"Таблица ответственных":${this.getLinkCellProject(change.projectName)}\r\n\r\n`;
     const props = change.properties;
 
     Object.keys(props).forEach(key => {
@@ -231,6 +232,25 @@ class application {
     return `\"${usernameToOutput}\":https://egamings.slack.com/team/${slackID}`;
   }
 
+  getLinkCellProject(projectName) {
+    let projectRowIndex = null;
+    const linkSuffix = '/edit#gid=0&range=';
+    // const projectName = this.trackedProjects.find(project => project.redmineAlias === projectAlias).projectName;
+    const lastRowIndex = this.sheetProjects.getLastRow();
+    for (let i = 3; i <= lastRowIndex; i++) {
+      if (this.sheetProjects.getRange(i, this.projectNameColumnIndex).getValue() === projectName) {
+        projectRowIndex = i;
+        break;
+      }
+    }
+
+    if (!projectRowIndex || !projectName) {
+      return '';
+    }
+
+    return `${this.tableURL}${linkSuffix}${projectRowIndex}:${projectRowIndex}`;
+  }
+
   showNotify(redmineAlias, projectName) {
     let url = `https://tracker.egamings.com/projects/${redmineAlias}/wiki/`;
     let text = `Изменения в проекте ${projectName} занесены в Redmine Wiki. Открыть >>`; //todo hyperlink
@@ -257,10 +277,9 @@ function onOpen() {
   app.clearNotify();
 }
 
-function onEdit(event)
-{
+function onEdit(event) {
 
-  //Redmine sync
+  //Redmine wiki sync start
   app.range = event.range;
 
   if ( ( event.source.getActiveSheet().getName() === app.sheetProjects.getName() )
@@ -275,6 +294,8 @@ function onEdit(event)
 
     app.handleChange();
   }
+  //Redmine wiki sync end
+
 
   var r = event.source.getActiveRange();
   var idCol = event.range.getColumn();
