@@ -101,6 +101,14 @@ class application {
       });
   }
 
+  async retrieveProjectsDataFromRedmine() {
+    for (let i = 0; i < this.trackedProjects.length; i++) {
+      this.trackedProjects[i].data = await this.getProjectData(this.trackedProjects[i].redmineAlias);
+      // Logger.log(`${this.trackedProjects[i].projectName} : ${JSON.stringify(this.trackedProjects[i].data)}`);
+    }
+    // this.trackedProjects.forEach(project => project.data = this.getProjectData(project.redmineAlias)).bind(this);
+  }
+
   async publishToRedmine(change) {
     const redmineAlias = this.getProjectRedmineAlias(change.projectName);
     const url = `https://tracker.egamings.com/projects/${redmineAlias}/wiki/Shared_Info.json?key=e2306b943c5e70ff7ba20b8bcfa95b289d78e103`;
@@ -166,35 +174,70 @@ class application {
     return this.source.getActiveSheet().getName() === this.sheetProjects.getName();
   }
 
-  async getProjectData(projectName) { // unused, but just for case, for the future
-    const redmineAlias = this.getProjectRedmineAlias(projectName);
+
+  async getProjectData(redmineAlias) {
     const url = `https://tracker.egamings.com/projects/${redmineAlias}/wiki/Shared_Info.json?key=e2306b943c5e70ff7ba20b8bcfa95b289d78e103`;
 
     const responce = await UrlFetchApp.fetch(url, {
           contentType: 'application/json; charset=utf-8'
         }).getContentText();
 
-    const result = JSON.parse(responce).wiki_page.text;
-    this.getProjectRedmineData(result);
+    const json = JSON.parse(responce).wiki_page.text;
+    return this.getProjectRedmineData(json);
   }
 
-  getProjectRedmineData(rawText) { // unused, but just for case, for the future
-    const arr = rawText.split('\r\n');
+  getProjectRedmineData(rawText) {
+
+    const projectData = {
+      rowIndex: null,
+      status: null,
+      pm: null,
+      unitLead: null,
+    };
+
+    // extract row number in table for project
+    const tableLinkText = rawText.split('\r\n\r\n')[0];
+    const regexp = `range=`;
+    const projectRangeText = tableLinkText.slice(tableLinkText.search(regexp) + regexp.length);
+    const rowNumber = parseInt(projectRangeText.split(`:`)[1]);
+    projectData['rowIndex'] = rowNumber;
+
+
+    const delimiterIndex = rawText.search('\r\n\r\n') + 1;
+    const propertiesText = rawText.slice(delimiterIndex);
+
+    const arr = propertiesText.split('\r\n');
+    // regular expr for recognize strings as properties, e.g.:
+    // `*PROP_NAME*: PROP_VALUE`
     const regExp = `^[*][А-Яа-яA-Za-z ]+[*]: `;
     const resultArr = arr.filter(item => item.search(regExp) !== -1);
 
+    const entries = Object.entries(this.trackedColumns);
     for (let i = 0; i < resultArr.length; i++) {
-      const elem = this.extractProperty(resultArr[i]);
-      this.currentChange.properties[elem.key] = elem.value;
+      let elem = this.extractProperty(resultArr[i]);
+      let ourEntry = entries.filter(entry => entry[1].titleRedmine === elem.key);
+      const propName = ourEntry[0][0];
+      projectData[propName] = elem.value;
+
+      // required only if wiki update is fired upon cell change
+      // to remove further
+      // this.currentChange.properties[elem.key] = elem.value;
     }
+    return projectData;
   }
 
   extractProperty(strProperty) {
     const strSplit = '*: ';
     const pos = strProperty.indexOf(strSplit) + strSplit.length;
+    let propValue = null;
 
     const propName = strProperty.substring(1, pos - strSplit.length);
-    const propValue = strProperty.includes(this.pmTitleRedmine) ? this.extractUserName(strProperty.substring(pos)) : strProperty.substring(pos);
+    if ((strProperty.includes(this.pmTitleRedmine)) || (strProperty.includes(this.unitLeadTitleRedmine))) {
+      propValue = this.extractUserName(strProperty.substring(pos));
+    } else  {
+      propValue = strProperty.substring(pos);
+    }
+    // const propValue = strProperty.includes(this.pmTitleRedmine) ? this.extractUserName(strProperty.substring(pos)) : strProperty.substring(pos);
 
     return {
       key: propName,
@@ -205,6 +248,8 @@ class application {
   extractUserName(rawName) {
     const splitStr = `":https://egamings.slack.com`;
     const pos = rawName.indexOf(splitStr);
+    if (pos === -1) return rawName;
+
     return rawName.substring(1, pos);
   }
 
@@ -335,4 +380,8 @@ function showNotify() {
 
   cellNotify.setValue('');
   cellNotify.setBackgroundRGB(254, 254, 254);
+}
+
+function debugForRedmine() {
+  app.retrieveProjectsDataFromRedmine();
 }
