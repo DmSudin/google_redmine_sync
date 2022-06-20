@@ -431,8 +431,6 @@ class application {
     await this.fetchProjectsDataFromRedmine();
 
     for (const projectItem of this.trackedProjects) {
-      const redmineAlias = projectItem.redmineAlias;
-      projectItem.redmineData = await this.loadProjectDataFromRedmine(redmineAlias);
       if (!this.isEqualProjectData(projectItem.tableData, projectItem.redmineData)) {
         isChangesExists = true;
         Logger.log(`Info about project ${projectItem.projectName} was changed. Updating...`);
