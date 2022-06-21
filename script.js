@@ -154,6 +154,7 @@ class application {
     for (let i = 0; i < this.trackedProjects.length; i++) {
       this.trackedProjects[i].redmineData = await this.loadProjectDataFromRedmine(this.trackedProjects[i].redmineAlias);
     }
+    this.trackedProjects = this.trackedProjects.filter(projectItem => projectItem.redmineData);
   }
 
   async publishChangeToRedmine(change) {
@@ -276,12 +277,18 @@ class application {
   async loadProjectDataFromRedmine(redmineAlias) {
     const url = `https://tracker.egamings.com/projects/${redmineAlias}/wiki/Shared_Info.json?key=e2306b943c5e70ff7ba20b8bcfa95b289d78e103`;
 
-    const responce = await UrlFetchApp.fetch(url, {
-          contentType: 'application/json; charset=utf-8'
-        }).getContentText();
-
-    const json = JSON.parse(responce).wiki_page.text;
-    return this.parseResponseFromRedmine(json);
+    try {
+      const response = await UrlFetchApp.fetch(url, {
+        contentType: 'application/json; charset=utf-8'
+      });
+      const responseText = response.getContentText();
+      const json = JSON.parse(responseText).wiki_page.text;
+      return this.parseResponseFromRedmine(json);
+    }
+    catch (err) {
+      Logger.log(`Unable to read wiki-page for project ${redmineAlias}. Check if the page ${url} exists. Skipped.`);
+      return null;
+    }
   }
 
   parseResponseFromRedmine(rawText) {
