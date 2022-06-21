@@ -275,7 +275,8 @@ class application {
   }
 
   async loadProjectDataFromRedmine(redmineAlias) {
-    const url = `https://tracker.egamings.com/projects/${redmineAlias}/wiki/Shared_Info.json?key=e2306b943c5e70ff7ba20b8bcfa95b289d78e103`;
+    const pageUrl = `https://tracker.egamings.com/projects/${redmineAlias}/wiki/Shared_Info`
+    const url = `${pageUrl}.json?key=${this.redmineKey}`;
 
     try {
       const response = await UrlFetchApp.fetch(url, {
@@ -286,7 +287,7 @@ class application {
       return this.parseResponseFromRedmine(json);
     }
     catch (err) {
-      Logger.log(`Unable to read wiki-page for project ${redmineAlias}. Check if the page ${url} exists. Skipped.`);
+      Logger.log(`Unable to read wiki-page for project ${redmineAlias}. Check if the page ${pageUrl} exists. Skipped.`);
       return null;
     }
   }
@@ -530,6 +531,6 @@ function showNotify() {
 }
 
 // SCR #363124
-async function runRedmineSynch() {
+async function startRedmineSynch() {
   await app.synchronizeWithRedmineWiki();
 }
