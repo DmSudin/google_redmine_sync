@@ -73,8 +73,13 @@ class application {
         // shows if table data of project is equal to redmine wiki data
         projectItem.redmineData = {};
         Object.assign(projectItem.redmineData, this.defaultProjectData);
-        projectItem.tableData = this.loadProjectDataFromTable(projectItem.projectName);
+        try {
+          projectItem.tableData = this.loadProjectDataFromTable(projectItem.projectName);
         result.push(projectItem);
+        } catch (err) {
+          continue
+        }
+
       }
     }
     return result;
@@ -121,6 +126,9 @@ class application {
       const result = {};
       Object.assign(result, this.defaultProjectData);
       const projectRowIndex = this.getTableRowIndexForProject(projectName);
+      if (!projectRowIndex) {
+        Logger.log(`Can't load information about project ${projectName} in the. Check if the project exists there. Skipped.`);
+      }
       const lasColumnIndex = this.sheetProjects.getLastColumn();
       const projectRowValues = this.sheetProjects.getSheetValues(projectRowIndex, 1, 1, lasColumnIndex);
 
