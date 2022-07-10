@@ -15,6 +15,9 @@ class application {
     this.range = undefined;
     this.oldValue = undefined;
     this.newValue = undefined;
+
+    this.langsDataConfig = {};
+    this.langsData = {};
   }
 
   init() {
@@ -41,8 +44,22 @@ class application {
     this.tableTitlesRowIndex = 2;
 
     this.sheetProjects = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Ответственные и проекты");
+    this.sheetLangs = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Языки"),
+
     this.sheetSettings = SpreadsheetApp.getActive().getSheetByName('Redmine_sync');
     this.projectNameColumnIndex = 2;
+
+    this.langsDataConfig = {
+
+      headerRangeIndex: 1,
+      langsTotalCountColumnIndex: 1,
+      langNameColumnIndex: 2,
+      langCodeColumnIndex: 3,
+      projectsListStartIndex: 5,
+      projectsListEndIndex: this.sheetLangs.getLastColumn()
+    };
+
+    this.langsData = {};
 
     this.cellNotify = this.sheetProjects.getRange(1, 3).getCell(1, 1);
     this.notifyDuration = 10;
@@ -493,6 +510,81 @@ class application {
     }
   }
 
+  async startUpdateLangsData() {
+    Logger.log('start update langs');
+    const fetchedLangData = [];
+
+    for (let i = this.langsDataConfig.projectsListStartIndex; i<= this.langsDataConfig.projectsListEndIndex; i++) {
+      const range = this.sheetLangs.getRange(this.langsDataConfig.headerRangeIndex, i).getCell(1, 1);
+      const projName = range.getValue();
+      const link = range.getRichTextValue().getLinkUrl();
+      if (projName && link) {
+        //TODO normalize URL
+        const request = {
+          url: `${link}api/v1/bootstrap`,
+          muteHttpExceptions: true
+        };
+        const response = {};
+        const langs = {};
+        this.langsData[`${i}`] = {projName, link, request, langs};
+      }
+    }
+    Object.entries(this.langsData).forEach(projectItem => {
+      const responseJson = {};
+
+      const projName = projectItem[1].projName;
+      const link = projectItem[1].link;
+      const request = projectItem[1].request;
+      const index = projectItem[0];
+      fetchedLangData.push({index, projName, link, request, responseJson});
+    });
+
+
+    //TODO use UrlFetchApp.fetch instead ?
+    //todo continue
+    // variant 2
+    // for (let i = 0; i <= this.fetchedLangData.length; i++) {
+    //   (function (i) {
+    //     this.fetchedLangData[i].responseJson = await UrlFetchApp.fetch(this.fetchedLangData[i].request).getContentText();
+    //   })(i);
+    // }
+
+    // variant 3
+    for (let {index, projName, link, request, responseJson} of this.fetchedLangData) {
+
+      const response = await UrlFetchApp.fetch(request);
+      if (response.getResponseCode === 200) {
+        Logger.log('200');
+        responseJson = JSON.parse(response.getContentText());
+      }
+      else {
+        const code = response.getResponseCode();
+        Logger.log(`bad. code: ${code}`);
+      }
+    }
+
+      // variant 1
+      // try {
+      //   const response = await UrlFetchApp.fetch(this.fetchedLangData.request);
+      //   if (response.getResponseCode() === 200) {
+      //     this.fetchedLangData[i].responseJson = JSON.parse(response.getContentText());
+      //   }
+      //   else {
+      //     Logger.log(`site: ${this.fetchedLangData[i].link}, code: ${response.getResponseCode()}`);
+      //   }
+      // }
+      // catch (err) {
+      //   //todo set background of site title
+      //   Logger.log(err);
+      //   continue
+      // }
+
+
+    Logger.log('111');
+  }
+
+
+
 }
 
 app = new application();
@@ -541,4 +633,9 @@ function showNotify() {
 // SCR #363124
 async function startRedmineSynch() {
   await app.synchronizeWithRedmineWiki();
+}
+
+// SCR #380862
+async function updateLanguagesData() {
+  await app.startUpdateLangsData();
 }
