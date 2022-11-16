@@ -523,42 +523,42 @@ class application {
                 const link = range.getRichTextValue().getLinkUrl();
                 if (link) {
                     //TODO normalize URL
-                    const request = {
-                        url: `${link}api/v1/bootstrap`,
-                        muteHttpExceptions: true
-                    };
-                    const response = {};
+                    const requestURL = `dzen.ru`;
+                    // const requestURL = `${link}api/v1/bootstrap`;
+                    const options = {validateHttpsCertificates: false};
+                    const response = await UrlFetchApp.fetch(requestURL, options);
+
+                    //breakpoint
+                    Logger.log(requestURL);
+                    Logger.log(response.getResponseCode());
+                    if (Math.trunc(response.getResponseCode()) === 200) {
+                        const responseJSON = JSON.parse(response.getContentText());
+                        Logger.log('111');
+                    }
+
                     const langs = {};
-                    this.langsData[`${i}`] = {projName, link, request, langs};
+                    this.langsData[`${i}`] = {projName, link, requestURL, langs};
+                    Logger.log('111');
                 }
             }
         }
-        Object.entries(this.langsData).forEach(projectItem => {
-            const responseJson = {};
+        // Object.entries(this.langsData).forEach(projectItem => {
+        //     const responseJson = {};
 
-            const projName = projectItem[1].projName;
-            const link = projectItem[1].link;
-            const request = projectItem[1].request;
-            const index = projectItem[0];
-            //BREAKPOINT
-            fetchedLangData.push({index, projName, link, request, responseJson});
-        });
-
-
-        //TODO use UrlFetchApp.fetch instead ?
-        //todo continue
-        // variant 2
-        // for (let i = 0; i <= this.fetchedLangData.length; i++) {
-        //   (function (i) {
-        //     this.fetchedLangData[i].responseJson = await UrlFetchApp.fetch(this.fetchedLangData[i].request).getContentText();
-        //   })(i);
-        // }
+        //     const projName = projectItem[1].projName;
+        //     const link = projectItem[1].link;
+        //     const request = projectItem[1].requestURL;
+        //     const index = projectItem[0];
+        //     //BREAKPOINT
+        //     fetchedLangData.push({index, projName, link, request, responseJson});
+        // });
 
         // variant 3
         for (let i = 0; i < fetchedLangData.length; i++) {
 
             //TO FIX Invalid argument: http://[object%20Object]
-            const response = await UrlFetchApp.fetch(fetchedLangData[i].request);
+            const options = {muteHttpExceptions: true};
+            const response = await UrlFetchApp.fetch(fetchedLangData[i].request.url, options);
             Logger.log(response.getResponseCode());
             if (response.getResponseCode() === 200) {
                 Logger.log('200');
@@ -586,6 +586,15 @@ class application {
         //   //todo set background of site title
         //   Logger.log(err);
         //   continue
+        // }
+
+                //TODO use UrlFetchApp.fetch instead ?
+        //todo continue
+        // variant 2
+        // for (let i = 0; i <= this.fetchedLangData.length; i++) {
+        //   (function (i) {
+        //     this.fetchedLangData[i].responseJson = await UrlFetchApp.fetch(this.fetchedLangData[i].request).getContentText();
+        //   })(i);
         // }
 
 
